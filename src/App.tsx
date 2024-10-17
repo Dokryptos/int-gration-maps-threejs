@@ -1,4 +1,5 @@
 import Map from './pages/map'
+import Maptest from './pages/maps-test'
 import {Routes, Route, Link} from 'react-router-dom'
 
 function App() {
@@ -11,7 +12,7 @@ function App() {
 
       <Routes>
       <Route path='/' element={<Map/>}></Route>
-      <Route path='/2' element={<Map/>}></Route>
+      <Route path='/2' element={<Maptest/>}></Route>
       </Routes>
     </div>
   );

@@ -1,67 +1,72 @@
-import * as THREE from 'three'
-import { Suspense, useState, useRef, useLayoutEffect, useMemo } from 'react'
-import { Canvas, useLoader } from '@react-three/fiber'
-import { SVGLoader } from 'three-stdlib'
-import { MapControls } from '@react-three/drei'
+import * as THREE from "three";
+import { SVGLoader } from "three-stdlib";
+import mapSVG from "../assets/images/map.svg";
+import { Canvas } from "@react-three/fiber";
 
-
-interface CellProps{
-    color: any,
-    shape: any,
-    fillOpacity: number;
+interface SVGPath {
+  color: THREE.ColorRepresentation;
 }
 
-const Cell: React.FC<CellProps> = ({ color, shape, fillOpacity }) => {
-  const [hovered, hover] = useState(false)
+interface SVGData {
+  paths: SVGPath[];
+}
 
+function mapData(data: SVGData): void {
+  const paths = data.paths;
+  const group = new THREE.Group();
+
+  for (let i = 0; i < paths.length; i++) {
+    const path = paths[i];
+
+    const material = new THREE.MeshBasicMaterial({
+      color: path.color,
+      side: THREE.DoubleSide,
+      depthWrite: false,
+    });
+
+    const shapes = SVGLoader.createShapes(path as any);
+
+    for (let j = 0; j < shapes.length; j++) {
+      const shape = shapes[j];
+      const geometry = new THREE.ShapeGeometry(shape);
+      const mesh = new THREE.Mesh(geometry, material);
+      group.add(mesh);
+    }
+  }
+
+  scene.add(group);
+}
+
+// const scene = new THREE.Scene();
+// const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+// const renderer = new THREE.WebGLRenderer();
+// renderer.setSize(window.innerWidth, window.innerHeight);
+// document.body.appendChild(renderer.domElement);
+
+// // Appel de la fonction pour charger et afficher le SVG
+// mapData(mapSVG);
+
+// camera.position.z = 500;
+
+// function animate() {
+//   requestAnimationFrame(animate);
+//   renderer.render(scene, camera);
+// }
+
+// animate();
+
+const MapTest = () => {
   return (
-    <mesh onPointerOver={(e) => hover(true)} onPointerOut={() => hover(false)}>
-      <meshBasicMaterial color={hovered ? 'hotpink' : color} opacity={fillOpacity} depthWrite={false} transparent />
-      <shapeBufferGeometry args={[shape]} />
-    </mesh>
-  )
-}
+    <>
+      <p>ah</p>
+      <Canvas>
+        <mesh>
+          <boxGeometry />
+          <meshStandardMaterial />
+        </mesh>
+      </Canvas>
+    </>
+  );
+};
 
-interface SVGProps{
-    url: string,
-}
-
-const Svg: React.FC<SVGProps> = ({ url }) => {
-  const { paths } = useLoader(SVGLoader, url)
-  const shapes = useMemo(
-    () => paths.flatMap((p) => p.toShapes(true).map((shape) => ({ 
-        shape, 
-        color: p.color, 
-        fillOpacity:p.userData?.style?.fillOpacity !== undefined ? p.userData.style.fillOpacity : 1 }))),
-    [paths]
-  )
-
-  const ref = useRef<THREE.Group>(null)
-  useLayoutEffect(() => {
-    if (!ref.current) return;
-
-    const sphere = new THREE.Box3().setFromObject(ref.current).getBoundingSphere(new THREE.Sphere())
-    ref.current.position.set(-sphere.center.x, -sphere.center.y, 0)
-  }, [])
-
-  return (
-    <group ref={ref}>
-      {shapes.map((props, index) => (
-        <Cell key={props.shape.uuid} {...props} />
-      ))}
-    </group>
-  )
-}
-
-function MapTest() {
-  return (
-    <Canvas frameloop="demand" orthographic camera={{ position: [0, 0, 50], zoom: 2, up: [0, 0, 1], far: 10000 }}>
-      <Suspense fallback={null}>
-        <Svg url="../public/images/map.svg" />
-      </Suspense>
-      <MapControls enableRotate={false} />
-    </Canvas>
-  )
-}
-
-export default MapTest
+export default MapTest;

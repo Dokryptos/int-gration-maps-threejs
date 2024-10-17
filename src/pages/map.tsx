@@ -12,7 +12,7 @@ const MapPlane: React.FC<MapPlanerProps> = ({ zoom }) => {
 
   // texture SVG 
   const texture = new THREE.TextureLoader().load("./public/images/map.svg");
-
+  console.log(texture);
   return (
     <mesh ref={ref} scale={[zoom, zoom, 1]}>
       <planeGeometry args={[10, 5]} /> 
