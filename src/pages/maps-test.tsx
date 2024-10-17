@@ -59,12 +59,14 @@ const MapTest = () => {
   return (
     <>
       <p>ah</p>
-      <Canvas>
-        <mesh>
-          <boxGeometry />
-          <meshStandardMaterial />
-        </mesh>
-      </Canvas>
+      <div className="size-full">
+        <Canvas>
+          <mesh>
+            <boxGeometry />
+            <meshStandardMaterial />
+          </mesh>
+        </Canvas>
+      </div>
     </>
   );
 };
