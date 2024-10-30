@@ -1,59 +1,60 @@
-import * as THREE from "three";
 import { SVGLoader } from "three-stdlib";
 import mapSVG from "../assets/images/map.svg";
+import { useEffect, useRef, useState } from "react";
 import { Canvas } from "@react-three/fiber";
+import * as THREE from "three";
+const loader = new SVGLoader();
 
-interface SVGPath {
-  color: THREE.ColorRepresentation;
+interface SvgShapeProps {
+  shape: THREE.Shape;
+  index: number;
 }
 
-interface SVGData {
-  paths: SVGPath[];
+function SvgShape({ shape, index }: SvgShapeProps) {
+  const mesh = useRef<THREE.Mesh>(null);
+  return (
+    <>
+      <mesh ref={mesh}>
+        <meshBasicMaterial
+          attach="material"
+          color={new THREE.Color("skyblue")}
+          opacity={1}
+          side={THREE.DoubleSide}
+          polygonOffset
+          polygonOffsetFactor={index}
+        />
+        <ShapeGeometry args={[shape]} />
+      </mesh>
+    </>
+  );
 }
 
-function mapData(data: SVGData): void {
-  const paths = data.paths;
-  const group = new THREE.Group();
+const svgResource = new Promise((resolve) =>
+  loader.load(mapSVG, (shapes) => {
+    resolve(
+      shapes.paths.flatMap((group, index) => {
+        return group.toShapes(true).map((shape) => {
+          const fillColor = group.userData.style.fill;
+          return { shape, color: fillColor, index };
+        });
+      })
+    );
+  })
+);
 
-  for (let i = 0; i < paths.length; i++) {
-    const path = paths[i];
-
-    const material = new THREE.MeshBasicMaterial({
-      color: path.color,
-      side: THREE.DoubleSide,
-      depthWrite: false,
-    });
-
-    const shapes = SVGLoader.createShapes(path as any);
-
-    for (let j = 0; j < shapes.length; j++) {
-      const shape = shapes[j];
-      const geometry = new THREE.ShapeGeometry(shape);
-      const mesh = new THREE.Mesh(geometry, material);
-      group.add(mesh);
-    }
-  }
-
-  scene.add(group);
-}
-
-// const scene = new THREE.Scene();
-// const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-// const renderer = new THREE.WebGLRenderer();
-// renderer.setSize(window.innerWidth, window.innerHeight);
-// document.body.appendChild(renderer.domElement);
-
-// // Appel de la fonction pour charger et afficher le SVG
-// mapData(mapSVG);
-
-// camera.position.z = 500;
-
-// function animate() {
-//   requestAnimationFrame(animate);
-//   renderer.render(scene, camera);
-// }
-
-// animate();
+const Scene = () => {
+  const [shapes, set] = useState([]);
+  useEffect(() => {
+    svgResource.then(set);
+  }, []);
+  return (
+    <group scale={1}>
+      {shapes.map((item) => (
+        <SvgShape key={item.shape.uuid} {...item} />
+      ))}
+    </group>
+  );
+};
 
 const MapTest = () => {
   return (
@@ -61,10 +62,7 @@ const MapTest = () => {
       <p>ah</p>
       <div className="size-full">
         <Canvas>
-          <mesh>
-            <boxGeometry />
-            <meshStandardMaterial />
-          </mesh>
+          <Scene />
         </Canvas>
       </div>
     </>
